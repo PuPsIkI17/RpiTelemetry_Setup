@@ -1,6 +1,6 @@
 ## Setup
 1. sudo apt install git-all
-2. git clone https://github.com/PuPsIkI17/Licenta/tree/master/Rpi_setup
+2. git clone https://github.com/PuPsIkI17/RpiTelemetry_Setup
 3. cd Licenta
 4. bash setup.py
 (It may need a restart)
