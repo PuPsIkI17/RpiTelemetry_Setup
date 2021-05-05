@@ -1,0 +1,18 @@
+{
+    "name": "Licenta",
+    "description": "Lucrarea de licenta Pislari Vadim 2021 Automatica si Calculatoare",
+    "main": "./dist/index.js",
+    "scripts": {
+        "tsc": "tsc",
+        "prepare": "npm run tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^10.17.50",
+        "typescript": "^3.9.7"
+    },
+    "dependencies": {
+        "aws-iot-device-sdk-v2": "../../../",
+        "express": "^4.17.1",
+        "yargs": "^14.2.3"
+    }
+}
