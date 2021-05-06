@@ -1,9 +1,8 @@
 ## Setup
-1. sudo apt install git-all
-2. git clone https://github.com/PuPsIkI17/RpiTelemetry_Setup
-3. cd RpiTelemetry_Setup/
+1. copy the Rpi.tar.xz archive to your device
+2. tar xf Rpi.tar.xz 
+3. cd Rpi
 4. bash setup.py
-(It may need a restart)
 
 ## RUN
 bash run.sh  (or)
