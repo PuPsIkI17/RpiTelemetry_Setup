@@ -135,6 +135,9 @@ yargs.command('*', false, (yargs: any) => {
         .showHelpOnFail(false);
 }, main).parse();
 
+function sleep(ms:number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function execute_session(connection: mqtt.MqttClientConnection, argv: Args, device_id:String) {
     return new Promise(async (resolve, reject) => {
@@ -142,7 +145,7 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
             const decoder = new TextDecoder('utf8');
             const on_publish = async (topic: string, payload: ArrayBuffer, dup: boolean, qos: mqtt.QoS, retain: boolean) => {
                 const json = decoder.decode(payload);
-                console.log(`Publish received. topic:"${topic}" dup:${dup} qos:${qos} retain:${retain}`);
+                console.log(`Message "${topic}" was published.`);
                 console.log(json);
                 const message = JSON.parse(json);
                 if (message.sequence == argv.count) {
@@ -150,9 +153,13 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
                 }
             }
 
-            await connection.subscribe(argv.topic, mqtt.QoS.AtLeastOnce, on_publish);
+            for (let op_idx = 0; ; ++op_idx) {
 
-            for (let op_idx = 0; op_idx < argv.count; ++op_idx) {
+                const exec = require("child_process").execSync;
+                const result = exec("python3 python/jsonData.py");
+                const device_data = result.toString("utf8").split(/\r?\n/);
+                const cpu_usage = parseFloat(device_data[0]);
+
                 const publish = async () => {
                      const memory = {
                         size: argv.memory_size,
@@ -160,7 +167,7 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
                      }
                      const cpu = {
                         temperature: argv.cpu_temperature,
-                        usage: argv.cpu_usage
+                        usage: cpu_usage
                      }
                     const msg = {
                         device_id: device_id,
@@ -173,7 +180,9 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
                     const json = JSON.stringify(msg);
                     connection.publish(argv.topic, json, mqtt.QoS.AtLeastOnce);
                 }
-                setTimeout(publish, op_idx * 1000);
+                await connection.subscribe(argv.topic, mqtt.QoS.AtLeastOnce, on_publish);
+                publish();
+                await sleep(10000);
             }
         }
         catch (error) {
@@ -185,7 +194,7 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
 async function main(argv: Args) {
     
     const exec = require("child_process").execSync;
-    const result = exec("python3 main.py");
+    const result = exec("python3 python/MAC.py");
     const device_data = result.toString("utf8").split(/\r?\n/);
     const device_id = device_data[0];
 

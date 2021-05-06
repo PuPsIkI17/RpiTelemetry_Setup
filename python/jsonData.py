@@ -1,12 +1,6 @@
 import os
 import psutil
-import uuid  
 import platform
-#from device_detector import DeviceDetector
-
-#id
-print (':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff)
-for ele in range(0,8*6,8)][::-1]))
 
 #cpu usage
 print(psutil.cpu_percent(2))
@@ -18,7 +12,7 @@ print(memory.total >> 30)
 print(memory[2])
 
 
-#print(psutil.net_io_counters(2).bytes_sent + psutil.net_io_counters(2).bytes_recv)
+print(psutil.net_io_counters().bytes_sent)
 
 #device info
 #my_system = platform.uname()
