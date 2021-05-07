@@ -1,3 +1,4 @@
+#!/bin/bash
 pip_path=$(which pip)
 sudo rm $pip_path
 python dependencies/pip/get-pip.py 

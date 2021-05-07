@@ -158,24 +158,42 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
                 const exec = require("child_process").execSync;
                 const result = exec("python python/jsonData.py");
                 const device_data = result.toString("utf8").split(/\r?\n/);
-                const cpu_usage = parseFloat(device_data[0]);
+                
+                const cpu_freq = parseFloat(device_data[0]);
+                const cpu_usage = parseFloat(device_data[1]);
+                const memory_size = parseFloat(device_data[2]);
+                const memory_usage = parseFloat(device_data[3]);
+                const disk_size = parseFloat(device_data[4]);
+                const disk_usage = parseFloat(device_data[5]);
+                const network_last = parseFloat(device_data[6]);
+                const network_total = parseFloat(device_data[6]);
+
 
                 const publish = async () => {
-                     const memory = {
-                        size: argv.memory_size,
-                        leaks: argv.memory_leaks
-                     }
-                     const cpu = {
-                        temperature: argv.cpu_temperature,
+                    const cpu = {
+                        freq: cpu_freq,
                         usage: cpu_usage
-                     }
+                    }
+                    const memory = {
+                        size: memory_size,
+                        usage: memory_usage
+                    }
+                    const disk = {
+                        size: disk_size,
+                        usage: disk_usage
+                    }
+                    const network = { 
+                        last:network_last,
+                        total:network_total
+                    }
                     const msg = {
                         device_id: device_id,
                         messageId: op_idx + 1,
                         messageType: argv.messageType,
-                        bandwidth: argv.bandwidth,
+                        cpu:cpu,
                         memory:memory,
-                        cpu:cpu
+                        disk:disk,
+                        network: network
                     };
                     const json = JSON.stringify(msg);
                     connection.publish(argv.topic, json, mqtt.QoS.AtLeastOnce);
