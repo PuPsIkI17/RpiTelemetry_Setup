@@ -1,4 +1,4 @@
-import { mqtt, auth, http, io, iot } from 'aws-iot-device-sdk-v2';
+import { mqtt, io, iot } from 'aws-iot-device-sdk-v2';
 import { TextDecoder } from 'util';
 
 type Args = { [index: string]: any };
@@ -145,9 +145,10 @@ async function execute_session(connection: mqtt.MqttClientConnection, argv: Args
             const decoder = new TextDecoder('utf8');
             const on_publish = async (topic: string, payload: ArrayBuffer, dup: boolean, qos: mqtt.QoS, retain: boolean) => {
                 const json = decoder.decode(payload);
-                console.log(`Message "${topic}" was published.`);
                 console.log(json);
                 const message = JSON.parse(json);
+                const mid = message.messageId;
+                console.log(`Message "${mid}" was published.`);
                 if (message.sequence == argv.count) {
                     resolve();
                 }
@@ -222,34 +223,14 @@ async function main(argv: Args) {
     }
 
     const client_bootstrap = new io.ClientBootstrap();
-
-    let config_builder = null;
-    if(argv.use_websocket) {
-        let proxy_options = undefined;
-        if (argv.proxy_host) {
-            proxy_options = new http.HttpProxyOptions(argv.proxy_host, argv.proxy_port);
-        }
-
-        config_builder = iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets({
-            region: argv.signing_region,
-            credentials_provider: auth.AwsCredentialsProvider.newDefault(client_bootstrap),
-            proxy_options: proxy_options
-        });
-    } else {
-        config_builder = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder_from_path(argv.cert, argv.key);
-    }
-
-    if (argv.ca_file != null) {
-        config_builder.with_certificate_authority_from_path(undefined, argv.ca_file);
-    }
+    let config_builder = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder_from_path(argv.cert, argv.key);
+    config_builder.with_certificate_authority_from_path(undefined, argv.ca_file);
 
     config_builder.with_clean_session(false);
-    config_builder.with_client_id(argv.client_id || "test-" + Math.floor(Math.random() * 100000000));
+    config_builder.with_client_id(argv.client_id || "id-" + Math.floor(Math.random() * 100000000));
     config_builder.with_endpoint(argv.endpoint);
 
-    // force node to wait 60 seconds before killing itself, promises do not keep node alive
     const timer = setTimeout(() => {}, 60 * 1000);
-
     const config = config_builder.build();
     const client = new mqtt.MqttClient(client_bootstrap);
     const connection = client.new_connection(config);
